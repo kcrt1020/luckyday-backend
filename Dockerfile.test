@@ -1,6 +1,9 @@
 FROM openjdk:17
 WORKDIR /app
 
+# ✅ 필수 유틸리티(xargs) 설치
+RUN apt-get update && apt-get install -y findutils
+
 # ✅ Gradle Wrapper & 프로젝트 전체 복사
 COPY . .
 
