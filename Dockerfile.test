@@ -1,8 +1,9 @@
-FROM openjdk:17-bullseye  # ✅ Debian 기반 이미지 사용 (apt-get 포함됨)
+# ✅ 패키지 관리자가 있는 OpenJDK 버전 사용
+FROM openjdk:17-slim
 WORKDIR /app
 
-# ✅ 패키지 매니저 업데이트 및 xargs(findutils) 설치
-RUN apt-get update && apt-get install -y findutils
+# ✅ 패키지 매니저 업데이트 및 xargs 설치 (Alpine 리눅스일 경우 apk 사용)
+RUN apt-get update && apt-get install -y findutils || apk add --no-cache findutils
 
 # ✅ Gradle Wrapper & 프로젝트 전체 복사
 COPY . .
