@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mysql:8
+    container_name: luckyday-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: luckyday_db
+      MYSQL_USER: luckydaydb
+      MYSQL_PASSWORD: luckydaydb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql   # 데이터 유지
+
+  backend:
+    build: .  # Spring Boot 프로젝트
+    image: luckyday-backend
+    container_name: luckyday-backend
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/luckyday_db?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: luckydaydb
+      SPRING_DATASOURCE_PASSWORD: luckydaydb
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    volumes:
+      - ./build/libs/luckyday-backend-0.0.1-SNAPSHOT.jar:/app/app.jar
+
+  frontend:
+    build: ../luckyday-frontend  # React 프로젝트
+    image: luckyday-frontend
+    container_name: luckyday-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../luckyday-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+
