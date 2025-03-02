@@ -1,0 +1,11 @@
+FROM openjdk:17
+WORKDIR /app
+
+# ✅ Gradle Wrapper & 프로젝트 전체 복사
+COPY . .
+
+# ✅ 실행 권한 추가 (gradlew 실행 가능하도록)
+RUN chmod +x gradlew
+
+# ✅ 컨테이너 내부에서 테스트 실행
+CMD ["./gradlew", "test"]
