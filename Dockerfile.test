@@ -1,10 +1,8 @@
-FROM openjdk:17
+FROM openjdk:17-bullseye  # ✅ Debian 기반 이미지 사용 (apt-get 포함됨)
 WORKDIR /app
 
-# ✅ 필수 유틸리티(xargs) 설치
-RUN if [ -f "/etc/debian_version" ]; then apt-get update && apt-get install -y findutils; \
-    elif [ -f "/etc/alpine-release" ]; then apk add --no-cache findutils; \
-    else echo "Unsupported OS"; exit 1; fi
+# ✅ 패키지 매니저 업데이트 및 xargs(findutils) 설치
+RUN apt-get update && apt-get install -y findutils
 
 # ✅ Gradle Wrapper & 프로젝트 전체 복사
 COPY . .
