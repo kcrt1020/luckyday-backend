@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI Pipeline (Docker 연동)
 
 on:
   push:
@@ -36,3 +36,11 @@ jobs:
 
       - name: Gradle 빌드 & 테스트
         run: ./gradlew build --no-daemon
+
+      # ✅ Docker 빌드 추가
+      - name: Docker 이미지 빌드
+        run: docker build -t luckyday-test .
+
+      # ✅ Docker 컨테이너 실행 후 테스트 & 삭제
+      - name: Docker 컨테이너에서 테스트 실행
+        run: docker run --rm luckyday-test ./gradlew test
