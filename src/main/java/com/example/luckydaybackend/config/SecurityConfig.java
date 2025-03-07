@@ -1,4 +1,4 @@
-package com.example.luckydaybackend.config;  // ✅ 패키지 경로 확인!
+package com.example.luckydaybackend.config;
 
 import com.example.luckydaybackend.auth.config.JwtFilter;
 import org.slf4j.Logger;
@@ -10,14 +10,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
 
-@Configuration  // ✅ 반드시 추가!
-@EnableWebSecurity  // ✅ 반드시 추가!
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -26,7 +30,7 @@ public class SecurityConfig {
 
     public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
-        logger.info("🚀 SecurityConfig 로드됨!");  // ✅ 로그 추가
+        logger.info("🚀 SecurityConfig 로드됨!");
     }
 
     @Bean
@@ -34,27 +38,38 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         logger.info("🔥 Security Filter Chain 설정 중...");
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ CORS 설정 적용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // ✅ 회원가입 & 로그인 API는 인증 없이 허용
-                        .requestMatchers("/actuator/**").permitAll()  // ✅ Actuator 엔드포인트 인증 없이 허용
-                        .anyRequest().authenticated()  // 🔒 나머지 API는 인증 필요 (기존 `permitAll()` 문제 해결)
+                        .requestMatchers("/", "/api/auth/**", "/actuator/**", "/api/public/**").permitAll()  // ✅ 루트 및 로그인 API 허용
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);  // ✅ JWT 필터 추가
+                .addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        logger.info("✅ Security 설정 완료!");
         return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return new InMemoryUserDetailsManager();  // 🔥 (임시) 유저 데이터 대신 DB 기반 UserDetailsService로 변경 필요!
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트엔드 URL
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

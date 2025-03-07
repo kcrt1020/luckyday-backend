@@ -12,6 +12,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql   # 데이터 유지
+    networks:
+      - luckyday-network
 
   backend:
     build: .  # Spring Boot 프로젝트
@@ -28,6 +30,8 @@ services:
       - db
     volumes:
       - ./build/libs/luckyday-backend-0.0.1-SNAPSHOT.jar:/app/app.jar
+    networks:
+      - luckyday-network
 
   frontend:
     build: ../luckyday-frontend  # React 프로젝트
@@ -36,12 +40,20 @@ services:
     restart: always
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8081
     volumes:
       - ../luckyday-frontend:/app
       - /app/node_modules
     depends_on:
       - backend
+    networks:
+      - luckyday-network
 
 volumes:
   mysql_data:
 
+networks:
+  luckyday-network:
+    name: luckyday-network
+    driver: bridge
