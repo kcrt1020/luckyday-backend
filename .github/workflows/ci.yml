@@ -24,7 +24,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Gradle 실행 권한 추가  # ✅ 실행 권한 추가
+      - name: Gradle 실행 권한 추가
         run: chmod +x ./gradlew
 
       - name: Gradle 캐시 설정
@@ -34,8 +34,9 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}
 
-      - name: Gradle 빌드 & 테스트
-        run: ./gradlew build --no-daemon
+      # ✅ 테스트를 제외하고 빌드
+      - name: Gradle 빌드 (테스트 제외)
+        run: ./gradlew build -x test --no-daemon  # 테스트 제외하고 빌드
 
       - name: Docker Compose 실행 (MySQL 포함)
         run: docker-compose -f docker-compose.yml up -d
@@ -43,5 +44,15 @@ jobs:
       - name: MySQL 컨테이너 상태 확인
         run: docker-compose ps  # MySQL 컨테이너가 제대로 실행되는지 확인
 
-      - name: Docker 컨테이너에서 테스트 실행
-        run: docker exec luckyday-backend ./gradlew test
+      - name: MySQL이 준비될 때까지 대기
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          until docker exec luckyday-mysql mysqladmin ping -h "localhost" --silent; do
+            echo "Waiting for database..."
+            sleep 5
+          done
+          echo "MySQL is ready!"
+
+      # ✅ MySQL이 실행된 후에 테스트 실행
+      - name: Gradle 테스트 실행
+        run: ./gradlew test --no-daemon
