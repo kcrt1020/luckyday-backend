@@ -34,6 +34,12 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}
 
+      # ✅ docker-compose 설치 추가
+      - name: Docker Compose 설치
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       # ✅ 테스트를 제외하고 빌드
       - name: Gradle 빌드 (테스트 제외)
         run: ./gradlew build -x test --no-daemon  # 테스트 제외하고 빌드
