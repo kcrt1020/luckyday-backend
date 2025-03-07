@@ -11,12 +11,17 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql   # 데이터 유지
+      - mysql_data:/var/lib/mysql
     networks:
       - luckyday-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
-    build: .  # Spring Boot 프로젝트
+    build: .
     image: luckyday-backend
     container_name: luckyday-backend
     restart: always
@@ -27,11 +32,13 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy  # ✅ MySQL이 정상 실행된 후에 시작
     volumes:
       - ./build/libs/luckyday-backend-0.0.1-SNAPSHOT.jar:/app/app.jar
     networks:
       - luckyday-network
+
 
   frontend:
     build: ../luckyday-frontend  # React 프로젝트

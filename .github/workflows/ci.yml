@@ -37,10 +37,17 @@ jobs:
       - name: Gradle 빌드 & 테스트
         run: ./gradlew build --no-daemon
 
-      # ✅ Docker 빌드 추가
-      - name: Docker 이미지 빌드
-        run: docker build -t luckyday-test -f Dockerfile.test .
+      - name: Docker Compose 실행 (MySQL 포함)
+        run: docker-compose -f docker-compose.yml up -d
 
-      # ✅ Docker 컨테이너 실행 후 테스트 & 삭제
+      - name: MySQL이 준비될 때까지 대기
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          until docker exec luckyday-mysql mysqladmin ping -h "localhost" --silent; do
+            echo "Waiting for database..."
+            sleep 5
+          done
+          echo "MySQL is ready!"
+
       - name: Docker 컨테이너에서 테스트 실행
-        run: docker run --rm luckyday-test ./gradlew test
+        run: docker exec luckyday-backend ./gradlew test
