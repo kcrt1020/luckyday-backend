@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ CORS 설정 적용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/auth/**", "/actuator/**", "/api/public/**").permitAll()  // ✅ 루트 및 로그인 API 허용
+                        .requestMatchers("/", "/api/auth/**", "/actuator/**", "/api/**").permitAll()  // ✅ 루트 및 로그인 API 허용
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -63,7 +63,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트엔드 URL
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174")); // 프론트엔드 URL
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
