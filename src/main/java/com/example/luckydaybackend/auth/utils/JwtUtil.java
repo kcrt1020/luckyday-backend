@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -63,5 +64,10 @@ public class JwtUtil {
             System.err.println("🚨 JWT 검증 실패: " + e.getMessage()); // ✅ 예외 메시지 출력
             return false;
         }
+    }
+
+    // ✅ JWT 토큰을 SHA-256 해시로 변환 (user_sessions에서 찾을 때 사용)
+    public String hashToken(String token) {
+        return DigestUtils.sha256Hex(token);
     }
 }

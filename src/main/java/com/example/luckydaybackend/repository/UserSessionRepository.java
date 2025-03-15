@@ -23,4 +23,6 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
     void deleteByExpiresAtBefore(Instant now);
 
     void deleteByUserIdAndTokenHash(Long userId, String tokenHash);
+
+    Optional<UserSession> findByTokenHash(String tokenHash);
 }
