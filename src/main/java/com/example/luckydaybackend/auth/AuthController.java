@@ -1,9 +1,9 @@
-package com.example.luckydaybackend.auth.controller;
+package com.example.luckydaybackend.auth;
 
-import com.example.luckydaybackend.auth.dto.LoginRequest;
-import com.example.luckydaybackend.auth.model.User;
-import com.example.luckydaybackend.auth.repository.UserRepository;
-import com.example.luckydaybackend.auth.utils.JwtUtil;
+import com.example.luckydaybackend.model.User;
+import com.example.luckydaybackend.model.UserProfile;
+import com.example.luckydaybackend.repository.UserProfileRepository;
+import com.example.luckydaybackend.repository.UserRepository;
 import com.example.luckydaybackend.model.UserSession;
 import com.example.luckydaybackend.repository.UserSessionRepository;
 import jakarta.transaction.Transactional;
@@ -32,13 +32,56 @@ public class AuthController {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final UserSessionRepository userSessionRepository;
+    private final UserProfileRepository userProfileRepository;
 
-    public AuthController(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserSessionRepository userSessionRepository) {
+    public AuthController(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserSessionRepository userSessionRepository, UserProfileRepository userProfileRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.userSessionRepository = userSessionRepository;
+        this.userProfileRepository = userProfileRepository;
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+        System.out.println("🔥 회원가입 요청: " + request.getUserId() + " / " + request.getEmail());
+
+        // ✅ 이메일 중복 검사
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body("❌ 이미 존재하는 이메일입니다.");
+        }
+
+        // ✅ 아이디 중복 검사
+        if (userRepository.existsByUserId(request.getUserId())) {
+            return ResponseEntity.badRequest().body("❌ 이미 존재하는 아이디입니다.");
+        }
+
+        // ✅ 새로운 유저 생성
+        User user = new User();
+        user.setUserId(request.getUserId());
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword())); // 🔒 비밀번호 암호화
+
+        userRepository.save(user);
+        System.out.println("✨ 신규 유저 생성: " + user.getEmail());
+
+        // ✅ `user_profile` 생성 (`email` 저장)
+        UserProfile userProfile = new UserProfile();
+        userProfile.setEmail(request.getEmail()); // ✅ 이메일 저장
+        userProfile.setNickname(request.getNickname());
+        userProfile.setProfileImage(null);
+        userProfile.setBio(null);
+        userProfile.setLocation(null);
+        userProfile.setWebsite(null);
+        userProfile.setBirthDate(null);
+
+        userProfileRepository.save(userProfile);
+        System.out.println("🎉 유저 프로필 생성 완료: " + userProfile.getNickname());
+
+        return ResponseEntity.ok("✅ 회원가입 성공!");
+    }
+
+
 
     // ✅ 로그인 API (기존 세션 삭제 후 새 토큰 저장)
     @Transactional

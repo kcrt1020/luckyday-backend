@@ -1,9 +1,12 @@
 package com.example.luckydaybackend.controller;
 
-import com.example.luckydaybackend.auth.model.User;
-import com.example.luckydaybackend.auth.utils.JwtUtil;
+import com.example.luckydaybackend.auth.JwtUtil;
+import com.example.luckydaybackend.dto.CloverDTO;
 import com.example.luckydaybackend.model.Clover;
+import com.example.luckydaybackend.model.User;
+import com.example.luckydaybackend.model.UserProfile;
 import com.example.luckydaybackend.service.CloverService;
+import com.example.luckydaybackend.service.UserProfileService;
 import com.example.luckydaybackend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/clovers")
@@ -25,17 +30,23 @@ public class CloverController {
     private final CloverService cloverService;
     private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final UserProfileService userProfileService;
 
-    public CloverController(CloverService cloverService, JwtUtil jwtUtil, UserService userService) {
+    // ✅ 생성자에서 UserProfileService 추가
+    public CloverController(CloverService cloverService, JwtUtil jwtUtil, UserService userService, UserProfileService userProfileService) {
         this.cloverService = cloverService;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
+        this.userProfileService = userProfileService;
     }
 
+    /**
+     * 클로버(트윗) 생성 API
+     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createClover(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
-            @RequestPart(value = "content", required = true) String contentJson,
+            @RequestPart("content") String contentJson,
             @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         try {
@@ -46,18 +57,13 @@ public class CloverController {
             String token = authHeader.substring(7);
             String email = jwtUtil.extractEmail(token);
 
-            // ✅ 이메일로 유저네임 조회
-            User user = userService.findByEmail(email); // ✅ 이메일로 유저 찾기
+            // ✅ 이메일로 유저 조회
+            User user = userService.findByEmail(email);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("유저를 찾을 수 없습니다.");
             }
-            String username = user.getUsername(); // ✅ 유저네임 가져오기
 
-            // ✅ 트윗 JSON 파싱 및 예외 처리
-            if (contentJson == null || contentJson.isEmpty()) {
-                return ResponseEntity.badRequest().body("트윗 내용이 비어 있습니다.");
-            }
-
+            // ✅ 트윗 JSON 파싱
             ObjectMapper objectMapper = new ObjectMapper();
             Clover clover = objectMapper.readValue(contentJson, Clover.class);
 
@@ -65,8 +71,8 @@ public class CloverController {
                 return ResponseEntity.badRequest().body("트윗 내용이 없습니다.");
             }
 
+            // ✅ 이메일 저장 (userId, nickname 저장 X)
             clover.setEmail(email);
-            clover.setUsername(username);
 
             // ✅ 파일 업로드 처리
             if (file != null && !file.isEmpty()) {
@@ -84,29 +90,67 @@ public class CloverController {
                 clover.setImageUrl("/uploads/" + fileName);
             }
 
-            return ResponseEntity.ok(cloverService.createClover(clover));
+            // ✅ 클로버 저장
+            Clover savedClover = cloverService.createClover(clover);
+            return ResponseEntity.ok(savedClover);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("트윗 등록 중 오류 발생");
         }
     }
 
-
-    // 모든 트윗 조회
+    /**
+     * 모든 클로버(트윗) 조회 API - 이메일 기반 유저 정보 포함
+     */
     @GetMapping
-    public List<Clover> getAllClovers() {
-        return cloverService.getAllClovers();
+    public ResponseEntity<List<CloverDTO>> getAllClovers() {
+        List<Clover> clovers = cloverService.getAllClovers();
+
+        // ✅ 이메일 기반으로 유저 정보 조회 (UserProfile에서 닉네임 가져옴)
+        List<CloverDTO> cloverDTOs = clovers.stream().map(clover -> {
+            User user = userService.findByEmail(clover.getEmail());
+            Optional<UserProfile> userProfile = userProfileService.findByEmail(clover.getEmail()); // ✅ 수정
+
+            String userId = (user != null) ? user.getUserId() : "Unknown";
+            String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown"); // ✅ Optional 사용
+
+            return new CloverDTO(clover, userId, nickname);
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(cloverDTOs);
     }
 
-    // 개별 트윗 조회
+    /**
+     * 특정 클로버(트윗) 조회 API - 이메일 기반 유저 정보 포함
+     */
     @GetMapping("/{id}")
-    public Clover getCloverById(@PathVariable Long id) {
-        return cloverService.getCloverById(id);
+    public ResponseEntity<?> getCloverById(@PathVariable Long id) {
+        Clover clover = cloverService.getCloverById(id);
+        if (clover == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("트윗을 찾을 수 없습니다.");
+        }
+
+        User user = userService.findByEmail(clover.getEmail());
+        Optional<UserProfile> userProfile = userProfileService.findByEmail(clover.getEmail()); // ✅ 수정: Optional 사용
+
+        String userId = (user != null) ? user.getUserId() : "Unknown";
+        String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown"); // ✅ Optional 사용
+
+        return ResponseEntity.ok(new CloverDTO(clover, userId, nickname));
     }
 
-    // 트윗 삭제
+
+    /**
+     * 클로버(트윗) 삭제 API
+     */
     @DeleteMapping("/{id}")
-    public void deleteClover(@PathVariable Long id) {
+    public ResponseEntity<?> deleteClover(@PathVariable Long id) {
+        Clover clover = cloverService.getCloverById(id);
+        if (clover == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("트윗을 찾을 수 없습니다.");
+        }
+
         cloverService.deleteClover(id);
+        return ResponseEntity.ok("트윗이 삭제되었습니다.");
     }
 }

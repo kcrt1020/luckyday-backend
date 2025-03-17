@@ -1,6 +1,6 @@
 package com.example.luckydaybackend.config;
 
-import com.example.luckydaybackend.auth.config.JwtFilter;
+import com.example.luckydaybackend.auth.JwtFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;

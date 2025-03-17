@@ -1,4 +1,4 @@
-package com.example.luckydaybackend.auth.dto;
+package com.example.luckydaybackend.auth;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,8 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class RegisterRequest {
-    private String username;
+public class LoginRequest {
     private String email;
     private String password;
 }

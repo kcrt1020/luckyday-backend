@@ -1,23 +1,30 @@
 package com.example.luckydaybackend.controller;
 
-import com.example.luckydaybackend.repository.CustomUserDetails;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.luckydaybackend.auth.JwtUtil;
+import com.example.luckydaybackend.dto.UserResponseDTO;
+import com.example.luckydaybackend.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/user")
+@RequiredArgsConstructor
 public class UserController {
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     @GetMapping("/me")
-    public Map<String, String> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            throw new RuntimeException("Unauthorized");
-        }
+    public ResponseEntity<UserResponseDTO> getCurrentUser(
+            @RequestHeader("Authorization") String token) {
 
-        return Map.of("username", userDetails.getUsername());
+        String jwt = token.replace("Bearer ", ""); // "Bearer " 제거
+        String email = jwtUtil.extractEmail(jwt);
+
+        UserResponseDTO user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
     }
 }

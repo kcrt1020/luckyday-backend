@@ -1,7 +1,5 @@
-package com.example.luckydaybackend.auth.config;
+package com.example.luckydaybackend.auth;
 
-import com.example.luckydaybackend.auth.utils.JwtUtil;
-import com.example.luckydaybackend.model.UserSession;
 import com.example.luckydaybackend.repository.UserSessionRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {

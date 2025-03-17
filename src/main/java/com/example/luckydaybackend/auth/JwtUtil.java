@@ -1,13 +1,11 @@
-package com.example.luckydaybackend.auth.utils;
+package com.example.luckydaybackend.auth;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
@@ -26,9 +24,9 @@ public class JwtUtil {
     }
 
     // ✅ 액세스 토큰 생성
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String userId) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -36,9 +34,9 @@ public class JwtUtil {
     }
 
     // ✅ 리프레시 토큰 생성
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String userId) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

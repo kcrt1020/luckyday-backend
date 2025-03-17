@@ -18,7 +18,6 @@ public class Clover {
     private Long id;
 
     private String email;
-    private String username;
 
     @Column(columnDefinition = "TEXT")
     private String content;

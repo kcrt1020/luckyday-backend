@@ -29,6 +29,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/luckyday_db?serverTimezone=UTC&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: luckydaydb
       SPRING_DATASOURCE_PASSWORD: luckydaydb
+      FILE_UPLOAD_DIR: /app/uploads  # ✅ 환경 변수 추가
     ports:
       - "8081:8080"
     depends_on:
@@ -36,6 +37,7 @@ services:
         condition: service_healthy  # ✅ MySQL이 정상 실행된 후에 시작
     volumes:
       - ./build/libs/luckyday-backend-0.0.1-SNAPSHOT.jar:/app/app.jar
+      - ./uploads:/app/uploads  # ✅ 로컬 uploads 폴더를 컨테이너와 연결
     networks:
       - luckyday-network
 
