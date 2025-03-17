@@ -46,7 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         token = token.substring(7);
 
-        // ✅ 토큰 유효성 검사
+        // ✅ 토큰 유효성 검사 (user_sessions 조회 X)
         if (!jwtUtil.validateToken(token)) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 응답 반환
             response.getWriter().write("토큰이 만료되었거나 유효하지 않습니다.");
@@ -54,17 +54,9 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String email = jwtUtil.extractEmail(token);
-        String tokenHash = jwtUtil.hashToken(token); // ✅ 토큰을 해싱하여 저장된 값과 비교
-
-        // ✅ `user_sessions`에서 해당 토큰이 존재하는지 확인
-        Optional<UserSession> session = userSessionRepository.findByTokenHash(tokenHash);
-        if (session.isEmpty()) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 응답 반환
-            response.getWriter().write("세션이 만료되었습니다.");
-            return;
-        }
-
         System.out.println("✅ JWT 인증 완료 : " + email);
+
+        // 🔥 accessToken은 DB 조회 필요 없음! 그대로 인증 처리 진행
         chain.doFilter(request, response);
     }
 }

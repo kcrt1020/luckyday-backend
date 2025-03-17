@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Tweet {
+public class Clover {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

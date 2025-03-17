@@ -2,8 +2,8 @@ package com.example.luckydaybackend.controller;
 
 import com.example.luckydaybackend.auth.model.User;
 import com.example.luckydaybackend.auth.utils.JwtUtil;
-import com.example.luckydaybackend.model.Tweet;
-import com.example.luckydaybackend.service.TweetService;
+import com.example.luckydaybackend.model.Clover;
+import com.example.luckydaybackend.service.CloverService;
 import com.example.luckydaybackend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
@@ -20,20 +20,20 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tweets")
-public class TweetController {
-    private final TweetService tweetService;
+@RequestMapping("/api/clovers")
+public class CloverController {
+    private final CloverService cloverService;
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
-    public TweetController(TweetService tweetService, JwtUtil jwtUtil, UserService userService) {
-        this.tweetService = tweetService;
+    public CloverController(CloverService cloverService, JwtUtil jwtUtil, UserService userService) {
+        this.cloverService = cloverService;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createTweet(
+    public ResponseEntity<?> createClover(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             @RequestPart(value = "content", required = true) String contentJson,
             @RequestPart(value = "file", required = false) MultipartFile file
@@ -59,14 +59,14 @@ public class TweetController {
             }
 
             ObjectMapper objectMapper = new ObjectMapper();
-            Tweet tweet = objectMapper.readValue(contentJson, Tweet.class);
+            Clover clover = objectMapper.readValue(contentJson, Clover.class);
 
-            if (tweet.getContent() == null || tweet.getContent().trim().isEmpty()) {
+            if (clover.getContent() == null || clover.getContent().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("트윗 내용이 없습니다.");
             }
 
-            tweet.setEmail(email);
-            tweet.setUsername(username);
+            clover.setEmail(email);
+            clover.setUsername(username);
 
             // ✅ 파일 업로드 처리
             if (file != null && !file.isEmpty()) {
@@ -81,10 +81,10 @@ public class TweetController {
                 Path filePath = uploadPath.resolve(fileName);
                 Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-                tweet.setImageUrl("/uploads/" + fileName);
+                clover.setImageUrl("/uploads/" + fileName);
             }
 
-            return ResponseEntity.ok(tweetService.createTweet(tweet));
+            return ResponseEntity.ok(cloverService.createClover(clover));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("트윗 등록 중 오류 발생");
@@ -94,19 +94,19 @@ public class TweetController {
 
     // 모든 트윗 조회
     @GetMapping
-    public List<Tweet> getAllTweets() {
-        return tweetService.getAllTweets();
+    public List<Clover> getAllClovers() {
+        return cloverService.getAllClovers();
     }
 
     // 개별 트윗 조회
     @GetMapping("/{id}")
-    public Tweet getTweetById(@PathVariable Long id) {
-        return tweetService.getTweetById(id);
+    public Clover getCloverById(@PathVariable Long id) {
+        return cloverService.getCloverById(id);
     }
 
     // 트윗 삭제
     @DeleteMapping("/{id}")
-    public void deleteTweet(@PathVariable Long id) {
-        tweetService.deleteTweet(id);
+    public void deleteClover(@PathVariable Long id) {
+        cloverService.deleteClover(id);
     }
 }
