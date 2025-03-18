@@ -44,10 +44,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ CORS 설정 적용
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/", "/api/auth/**", "/actuator/**").permitAll()  // ✅ 루트 및 로그인 API 허용
-//                        .requestMatchers("/api/**").authenticated()
-//                        .anyRequest().authenticated()
-                          .requestMatchers("/**").permitAll()
+                        .requestMatchers("/", "/api/auth/**", "/api/profile/**","/api/clovers/**","/actuator/**").permitAll()  // ✅ 루트 및 로그인 API 허용
+                          .requestMatchers("/uploads/**").permitAll()
+                          .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // 🔥 `addFilterBefore()`로 변경

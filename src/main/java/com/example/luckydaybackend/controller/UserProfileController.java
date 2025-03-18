@@ -54,8 +54,6 @@ public class UserProfileController {
     }
 
 
-
-
     /**
      * 로그인된 사용자가 작성한 클로버 목록 가져오기
      */
@@ -87,14 +85,27 @@ public class UserProfileController {
     @PostMapping("/avatar")
     public ResponseEntity<UserProfileDTO> uploadAvatar(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestParam("profileImage") MultipartFile file) {
+            @RequestPart("profileImage") MultipartFile file) {
 
-        // ✅ 파일 이름을 이메일 기반으로 저장
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
         String sanitizedEmail = userPrincipal.getEmail().replace("@", "_").replace(".", "_");
-        String fileName = "avatar_" + sanitizedEmail + "_" + file.getOriginalFilename();
-        String imageUrl = storageService.saveImage(file, fileName); // ✅ 수정
+        String originalFileName = file.getOriginalFilename();
 
-        UserProfileDTO dto = userProfileService.updateProfileImage(userPrincipal.getEmail(), imageUrl); // ✅ 이메일 기반 변경
+        System.out.println("Uploading file: " + originalFileName); // 로그 추가
+
+        if (originalFileName == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        String fileName = "avatar_" + sanitizedEmail + "_" + originalFileName;
+        String imageUrl = storageService.saveImage(file, fileName);
+
+        System.out.println("File saved as: " + imageUrl); // 로그 추가
+
+        UserProfileDTO dto = userProfileService.updateProfileImage(userPrincipal.getEmail(), imageUrl);
         return ResponseEntity.ok(dto);
     }
 }
