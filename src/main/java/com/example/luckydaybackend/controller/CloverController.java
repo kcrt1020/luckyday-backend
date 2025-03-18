@@ -41,7 +41,7 @@ public class CloverController {
     }
 
     /**
-     * 클로버(트윗) 생성 API
+     * 클로버 생성 API
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createClover(
@@ -100,7 +100,7 @@ public class CloverController {
     }
 
     /**
-     * 모든 클로버(트윗) 조회 API - 이메일 기반 유저 정보 포함
+     * 모든 클로버 조회 API
      */
     @GetMapping
     public ResponseEntity<List<CloverDTO>> getAllClovers() {
@@ -121,7 +121,36 @@ public class CloverController {
     }
 
     /**
-     * 특정 클로버(트윗) 조회 API - 이메일 기반 유저 정보 포함
+     * 특정 유저 클로버 조회 API
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<CloverDTO>> getCloversByUserId(@PathVariable String userId) {
+        // ✅ 유저 아이디(userId)로 유저 이메일(email) 조회
+        User user = userService.findByUserId(userId);
+        if (user == null) {
+            return ResponseEntity.notFound().build(); // 유저가 없으면 404 반환
+        }
+
+        String email = user.getEmail();
+
+        // ✅ 유저 이메일로 클로버 조회
+        List<Clover> clovers = cloverService.getCloversByEmail(email);
+
+        // ✅ 이메일 기반으로 유저 프로필 조회 (닉네임 가져옴)
+        Optional<UserProfile> userProfile = userProfileService.findByEmail(email);
+        String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown");
+
+        // ✅ DTO 변환
+        List<CloverDTO> cloverDTOs = clovers.stream()
+                .map(clover -> new CloverDTO(clover, userId, nickname))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(cloverDTOs);
+    }
+
+
+    /**
+     * 특정 클로버 조회 API
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getCloverById(@PathVariable Long id) {
@@ -141,7 +170,7 @@ public class CloverController {
 
 
     /**
-     * 클로버(트윗) 삭제 API
+     * 클로버 삭제 API
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteClover(@PathVariable Long id) {

@@ -7,8 +7,11 @@ import com.example.luckydaybackend.service.CloverService;
 import com.example.luckydaybackend.service.StorageService;
 import com.example.luckydaybackend.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,26 +27,59 @@ public class UserProfileController {
     private final CloverService cloverService; // ✅ 클로버 관련 서비스 추가
 
     /**
-     * 로그인된 사용자의 프로필 가져오기 (이메일 기반)
+     * 로그인된 사용자의 프로필 가져오기
      */
     @GetMapping("/me")
-    public ResponseEntity<UserProfileDTO> getUserProfile(
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<?> getUserProfile(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
+            System.out.println("🚨 @AuthenticationPrincipal이 null입니다. SecurityContext에서 가져오는 방법 시도...");
 
-        UserProfileDTO userProfile = userProfileService.getUserProfile(userPrincipal.getEmail()); // ✅ 이메일로 조회
+            // ✅ SecurityContext에서 직접 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)) {
+                System.out.println("🚨 SecurityContextHolder에서도 UserPrincipal을 찾을 수 없음!");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized access: UserPrincipal is null");
+            }
+
+            userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            System.out.println("✅ SecurityContextHolder에서 UserPrincipal 가져옴: " + userPrincipal.getEmail());
+        }
+
+        String email = userPrincipal.getEmail();
+
+        // ✅ userProfileService에서 userId 포함된 정보 가져오기
+        UserProfileDTO userProfile = userProfileService.getUserProfile(email);
+
         return ResponseEntity.ok(userProfile);
     }
 
+
+
+
     /**
-     * 로그인된 사용자가 작성한 클로버 목록 가져오기 (이메일 기반)
+     * 로그인된 사용자가 작성한 클로버 목록 가져오기
      */
     @GetMapping("/clovers")
-    public ResponseEntity<List<Clover>> getUserClovers(
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<List<Clover>> getUserClovers(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
+            System.out.println("🚨 userPrincipal이 null입니다!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
-        List<Clover> clovers = cloverService.getCloversByEmail(userPrincipal.getEmail()); // ✅ 이메일로 변경
+        String email = userPrincipal.getEmail();
+        System.out.println("✅ 클로버 조회 요청 - 이메일: " + email);
+
+        List<Clover> clovers = cloverService.getCloversByEmail(email);
+
+        if (clovers.isEmpty()) {
+            System.out.println("⚠️ 클로버 데이터가 없음!");
+        } else {
+            System.out.println("✅ 클로버 데이터 반환: " + clovers);
+        }
+
         return ResponseEntity.ok(clovers);
     }
+
 
     /**
      * 프로필 이미지 업로드 (이메일 기반)

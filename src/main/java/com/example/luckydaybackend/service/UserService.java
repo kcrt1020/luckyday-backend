@@ -20,6 +20,11 @@ public class UserService {
                 .orElse(null); // ✅ 유저가 없으면 null 반환
     }
 
+    public User findByUserId(String userId) {
+        return userRepository.findByUserId(userId)
+                .orElse(null); // ✅ 유저가 없으면 null 반환
+    }
+
     public UserResponseDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));

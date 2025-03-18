@@ -46,6 +46,15 @@ public class CloverService {
      * 이메일 기반 클로버 조회
      */
     public List<Clover> getCloversByEmail(String email) {
-        return cloverRepository.findByEmailOrderByCreatedAtDesc(email); // ✅ 이메일 기반으로 변경
+        System.out.println("🔍 Clover 조회 - 이메일: " + email);
+        List<Clover> clovers = cloverRepository.findByEmailOrderByCreatedAtDesc(email);
+
+        if (clovers.isEmpty()) {
+            System.out.println("⚠️ 클로버 없음! DB에 데이터 확인 필요.");
+        } else {
+            System.out.println("✅ 가져온 클로버 데이터: " + clovers);
+        }
+
+        return clovers;
     }
 }

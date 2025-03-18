@@ -1,8 +1,10 @@
 package com.example.luckydaybackend.service;
 
 import com.example.luckydaybackend.dto.UserProfileDTO;
+import com.example.luckydaybackend.model.User;
 import com.example.luckydaybackend.model.UserProfile;
 import com.example.luckydaybackend.repository.UserProfileRepository;
+import com.example.luckydaybackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.Optional;
 public class UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final StorageService storageService; // ✅ 올바른 서비스 사용
+    private final UserRepository userRepository;
 
     /**
      * 이메일 기반 유저 프로필 조회 (Optional)
@@ -31,7 +34,16 @@ public class UserProfileService {
         UserProfile profile = userProfileRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            throw new RuntimeException("유저를 찾을 수 없습니다: " + email);
+        }
+
+        User user = optionalUser.get();  // ✅ userId가 User 테이블에 있으므로 가져옴
+
         return new UserProfileDTO(
+                user.getUserId(),
                 profile.getEmail(),
                 profile.getNickname(),
                 profile.getProfileImage(),
@@ -65,10 +77,19 @@ public class UserProfileService {
         UserProfile profile = userProfileRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            throw new RuntimeException("유저를 찾을 수 없습니다: " + email);
+        }
+        User user = optionalUser.get();  // ✅ userId가 User 테이블에 있으므로 가져옴
+
+
         profile.setProfileImage(imageUrl);
         userProfileRepository.save(profile);
 
         return new UserProfileDTO(
+                user.getUserId(),
                 profile.getEmail(),
                 profile.getNickname(),
                 profile.getProfileImage(),

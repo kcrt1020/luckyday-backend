@@ -1,30 +1,44 @@
 package com.example.luckydaybackend.auth;
 
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
 public class UserPrincipal implements UserDetails {
-    // ✅ getUserId 대신 getEmail 사용
-    @Getter
-    private final String email; // ✅ userId 제거
-    private final String password;
+    private Long id;
+    private String email;
+    private String password;
+    private Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(String email, String password) { // ✅ userId 제거
+    public UserPrincipal(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
         this.email = email;
         this.password = password;
+        this.authorities = authorities;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     @Override
-    public String getUsername() { // ✅ getUsername은 email 반환
-        return email;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
     }
 
     @Override
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public String getUsername() { // 보통 email을 username으로 사용
+        return email;
     }
 
     @Override
@@ -45,10 +59,5 @@ public class UserPrincipal implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
     }
 }

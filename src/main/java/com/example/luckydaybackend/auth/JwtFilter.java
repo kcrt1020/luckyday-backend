@@ -6,6 +6,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -14,11 +19,11 @@ import java.io.IOException;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final UserSessionRepository userSessionRepository; // ✅ UserSessionRepository 주입
+    private final UserDetailsService userDetailsService; // ✅ UserDetailsService 주입 (유저 정보 가져오기)
 
-    public JwtFilter(JwtUtil jwtUtil, UserSessionRepository userSessionRepository) {
+    public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
-        this.userSessionRepository = userSessionRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -36,16 +41,16 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = request.getHeader("Authorization");
 
         if (token == null || !token.startsWith("Bearer ")) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 응답 반환
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.getWriter().write("토큰이 없습니다.");
             return;
         }
 
         token = token.substring(7);
 
-        // ✅ 토큰 유효성 검사 (user_sessions 조회 X)
+        // ✅ 토큰 유효성 검사
         if (!jwtUtil.validateToken(token)) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 응답 반환
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.getWriter().write("토큰이 만료되었거나 유효하지 않습니다.");
             return;
         }
@@ -53,7 +58,20 @@ public class JwtFilter extends OncePerRequestFilter {
         String email = jwtUtil.extractEmail(token);
         System.out.println("✅ JWT 인증 완료 : " + email);
 
-        // 🔥 accessToken은 DB 조회 필요 없음! 그대로 인증 처리 진행
+        // ✅ UserDetails 가져오기
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        System.out.println("🔍 UserDetails 로드 완료: " + userDetails.getUsername());
+
+        // ✅ Authentication 객체 생성
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        // ✅ SecurityContextHolder에 인증 정보 저장
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        System.out.println("✅ SecurityContextHolder에 인증 정보 설정 완료!");
+
         chain.doFilter(request, response);
     }
 }
