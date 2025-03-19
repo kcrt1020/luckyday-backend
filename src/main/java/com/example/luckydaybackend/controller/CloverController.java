@@ -113,8 +113,9 @@ public class CloverController {
 
             String userId = (user != null) ? user.getUserId() : "Unknown";
             String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown"); // ✅ Optional 사용
+            String profileImage = userProfile.map(UserProfile::getProfileImage).orElse("Unknown"); // ✅ Optional 사용
 
-            return new CloverDTO(clover, userId, nickname);
+            return new CloverDTO(clover, userId, nickname, profileImage);
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(cloverDTOs);
@@ -139,10 +140,11 @@ public class CloverController {
         // ✅ 이메일 기반으로 유저 프로필 조회 (닉네임 가져옴)
         Optional<UserProfile> userProfile = userProfileService.findByEmail(email);
         String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown");
+        String profileImage = userProfile.map(UserProfile::getProfileImage).orElse("Unknown");
 
         // ✅ DTO 변환
         List<CloverDTO> cloverDTOs = clovers.stream()
-                .map(clover -> new CloverDTO(clover, userId, nickname))
+                .map(clover -> new CloverDTO(clover, userId, nickname, profileImage))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(cloverDTOs);
@@ -164,8 +166,9 @@ public class CloverController {
 
         String userId = (user != null) ? user.getUserId() : "Unknown";
         String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown"); // ✅ Optional 사용
+        String profileImage = userProfile.map(UserProfile::getProfileImage).orElse("Unknown"); // ✅ Optional 사용
 
-        return ResponseEntity.ok(new CloverDTO(clover, userId, nickname));
+        return ResponseEntity.ok(new CloverDTO(clover, userId, nickname, profileImage));
     }
 
 

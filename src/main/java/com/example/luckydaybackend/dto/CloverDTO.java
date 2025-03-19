@@ -14,8 +14,9 @@ public class CloverDTO {
     private String email;
     private String userId;
     private String nickname;
+    private String profileImage;
 
-    public CloverDTO(Clover clover, String userId, String nickname) {
+    public CloverDTO(Clover clover, String userId, String nickname, String profileImage) {
         this.id = clover.getId();
         this.content = clover.getContent();
         this.imageUrl = clover.getImageUrl();
@@ -23,5 +24,6 @@ public class CloverDTO {
         this.email = clover.getEmail();
         this.userId = userId;
         this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 }
