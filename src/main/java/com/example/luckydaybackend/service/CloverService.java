@@ -57,4 +57,10 @@ public class CloverService {
 
         return clovers;
     }
+
+    public Clover findById(Long id) {
+        return cloverRepository.findById(id)
+                .orElse(null);
+    }
+
 }

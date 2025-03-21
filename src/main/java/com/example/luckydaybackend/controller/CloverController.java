@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,16 +64,26 @@ public class CloverController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("유저를 찾을 수 없습니다.");
             }
 
-            // ✅ 트윗 JSON 파싱
+            // ✅ 클로버 JSON 파싱
             ObjectMapper objectMapper = new ObjectMapper();
             Clover clover = objectMapper.readValue(contentJson, Clover.class);
 
             if (clover.getContent() == null || clover.getContent().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("트윗 내용이 없습니다.");
+                return ResponseEntity.badRequest().body("내용이 없습니다.");
             }
 
-            // ✅ 이메일 저장 (userId, nickname 저장 X)
+            // ✅ 작성자 이메일 저장
             clover.setEmail(email);
+
+            // ✅ 부모 클로버 설정
+            if (clover.getParentClover() != null && clover.getParentClover().getId() != null) {
+                Long parentId = clover.getParentClover().getId();
+                Clover parentClover = cloverService.findById(parentId);
+                if (parentClover == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 부모 클로버입니다.");
+                }
+                clover.setParentClover(parentClover);
+            }
 
             // ✅ 파일 업로드 처리
             if (file != null && !file.isEmpty()) {
@@ -95,9 +106,10 @@ public class CloverController {
             return ResponseEntity.ok(savedClover);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("트윗 등록 중 오류 발생");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("클로버 등록 중 오류 발생");
         }
     }
+
 
     /**
      * 모든 클로버 조회 API
@@ -183,6 +195,7 @@ public class CloverController {
         }
 
         cloverService.deleteClover(id);
-        return ResponseEntity.ok("트윗이 삭제되었습니다.");
+        return ResponseEntity.ok(Map.of("message", "트윗이 삭제되었습니다."));
+
     }
 }

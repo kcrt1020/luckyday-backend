@@ -8,9 +8,11 @@ services:
       MYSQL_DATABASE: luckyday_db
       MYSQL_USER: luckydaydb
       MYSQL_PASSWORD: luckydaydb
+      TZ: Asia/Seoul   # 타임존 설정 추가
     ports:
       - "3306:3306"
     volumes:
+      - ./mysql-conf:/etc/mysql/conf.d
       - mysql_data:/var/lib/mysql
     networks:
       - luckyday-network
@@ -26,7 +28,7 @@ services:
     container_name: luckyday-backend
     restart: always
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/luckyday_db?serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/luckyday_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: luckydaydb
       SPRING_DATASOURCE_PASSWORD: luckydaydb
       FILE_UPLOAD_DIR: /app/uploads  # ✅ 환경 변수 추가

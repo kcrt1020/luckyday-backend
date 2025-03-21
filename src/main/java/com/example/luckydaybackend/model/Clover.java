@@ -25,4 +25,8 @@ public class Clover {
     private String imageUrl;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_clover_id")
+    private Clover parentClover;  // 댓글일 경우 부모 클로버 참조
 }
