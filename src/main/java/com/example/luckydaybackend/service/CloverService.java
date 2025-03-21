@@ -63,4 +63,9 @@ public class CloverService {
                 .orElse(null);
     }
 
+    public List<Clover> getRepliesByParentId(Long parentId) {
+        return cloverRepository.findByParentCloverId(parentId);
+    }
+
+
 }

@@ -196,6 +196,27 @@ public class CloverController {
 
         cloverService.deleteClover(id);
         return ResponseEntity.ok(Map.of("message", "트윗이 삭제되었습니다."));
-
     }
+
+    /**
+     * 특정 클로버의 댓글 조회 API
+     */
+    @GetMapping("/replies/{parentId}")
+    public ResponseEntity<List<CloverDTO>> getReplies(@PathVariable Long parentId) {
+        List<Clover> replies = cloverService.getRepliesByParentId(parentId);
+
+        List<CloverDTO> replyDTOs = replies.stream().map(reply -> {
+            User user = userService.findByEmail(reply.getEmail());
+            Optional<UserProfile> userProfile = userProfileService.findByEmail(reply.getEmail());
+
+            String userId = (user != null) ? user.getUserId() : "Unknown";
+            String nickname = userProfile.map(UserProfile::getNickname).orElse("Unknown");
+            String profileImage = userProfile.map(UserProfile::getProfileImage).orElse("Unknown");
+
+            return new CloverDTO(reply, userId, nickname, profileImage);
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(replyDTOs);
+    }
+
 }

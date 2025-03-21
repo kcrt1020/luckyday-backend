@@ -1,6 +1,7 @@
 package com.example.luckydaybackend.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,5 +29,6 @@ public class Clover {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_clover_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "parentClover"})
     private Clover parentClover;  // 댓글일 경우 부모 클로버 참조
 }

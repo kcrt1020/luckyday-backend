@@ -15,4 +15,6 @@ public interface CloverRepository extends JpaRepository<Clover, Long> {
     // ✅ 이메일 기반으로 클로버 조회 (최신순)
     List<Clover> findByEmailOrderByCreatedAtDesc(String email);
 
+    List<Clover> findByParentCloverId(Long parentId);
+
 }
