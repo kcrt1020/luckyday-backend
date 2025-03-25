@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -24,8 +25,7 @@ public class UserProfile {
     private String location;
     private String website;
 
-    @Temporal(TemporalType.DATE)
-    private Date birthDate;
+    private LocalDate birthDate;
 
     @Column(name = "created_at", updatable = false, insertable = false)
     private Timestamp createdAt;

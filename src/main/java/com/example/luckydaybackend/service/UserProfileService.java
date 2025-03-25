@@ -5,12 +5,14 @@ import com.example.luckydaybackend.model.User;
 import com.example.luckydaybackend.model.UserProfile;
 import com.example.luckydaybackend.repository.UserProfileRepository;
 import com.example.luckydaybackend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -49,7 +51,8 @@ public class UserProfileService {
                 profile.getProfileImage(),
                 profile.getBio(),
                 profile.getLocation(),
-                profile.getWebsite()
+                profile.getWebsite(),
+                profile.getBirthDate()
         );
     }
 
@@ -95,7 +98,40 @@ public class UserProfileService {
                 profile.getProfileImage(),
                 profile.getBio(),
                 profile.getLocation(),
-                profile.getWebsite()
+                profile.getWebsite(),
+                profile.getBirthDate()
         );
     }
+
+    @Transactional
+    public void updateUserId(String email, String newUserId) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            user.get().setUserId(newUserId);
+            userRepository.save(user.get());
+        } else {
+            throw new RuntimeException("User not found with email: " + email);
+        }
+    }
+
+    @Transactional
+    public void updateUserProfile(String email, UserProfileDTO dto) {
+        Optional<UserProfile> optionalProfile = userProfileRepository.findByEmail(email);
+
+        if (optionalProfile.isPresent()) {
+            UserProfile profile = optionalProfile.get();
+
+            profile.setNickname(dto.getNickname());
+            profile.setBio(dto.getBio());
+            profile.setLocation(dto.getLocation());
+            profile.setWebsite(dto.getWebsite());
+            profile.setBirthDate(dto.getBirthDate());
+
+            userProfileRepository.save(profile);
+        } else {
+            throw new RuntimeException("UserProfile not found for email: " + email);
+        }
+    }
+
+
 }

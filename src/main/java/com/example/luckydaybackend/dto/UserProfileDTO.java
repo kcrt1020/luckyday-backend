@@ -1,14 +1,15 @@
 package com.example.luckydaybackend.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
+
+import java.time.LocalDate;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserProfileDTO {
     private String userId;  // ✅ userId 추가
     private String email;
@@ -17,4 +18,6 @@ public class UserProfileDTO {
     private String bio;
     private String location;
     private String website;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthDate;
 }

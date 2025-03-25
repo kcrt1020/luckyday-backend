@@ -108,4 +108,25 @@ public class UserProfileController {
         UserProfileDTO dto = userProfileService.updateProfileImage(userPrincipal.getEmail(), imageUrl);
         return ResponseEntity.ok(dto);
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUserProfile(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody UserProfileDTO profileDTO
+    ) {
+        if (userPrincipal == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized access");
+        }
+
+        String email = userPrincipal.getEmail();
+
+        // 1. user_profile 테이블 업데이트
+        userProfileService.updateUserProfile(email, profileDTO);
+
+        // 2. users 테이블에서 user_id (표시용 ID) 업데이트
+        userProfileService.updateUserId(email, profileDTO.getUserId());
+
+        return ResponseEntity.ok(profileDTO);
+    }
+
 }
