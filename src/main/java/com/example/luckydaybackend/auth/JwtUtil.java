@@ -60,7 +60,7 @@ public class JwtUtil {
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token);
-            System.out.println("✅ 토큰 검증 성공: " + token);
+//            System.out.println("✅ 토큰 검증 성공: " + token);
             return true;
         } catch (Exception e) {
             System.err.println("🚨 JWT 검증 실패: " + e.getMessage());
@@ -87,7 +87,7 @@ public class JwtUtil {
     // ✅ JWT 토큰을 SHA-256 해시로 변환 (user_sessions 테이블에서 찾을 때 사용)
     public String hashToken(String token) {
         String hashedToken = DigestUtils.sha256Hex(token);
-        System.out.println("✅ 해싱된 토큰 값: " + hashedToken);
+//        System.out.println("✅ 해싱된 토큰 값: " + hashedToken);
         return hashedToken;
     }
 

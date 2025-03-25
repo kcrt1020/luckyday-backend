@@ -133,5 +133,16 @@ public class UserProfileService {
         }
     }
 
+    public UserProfileDTO getUserProfileByUserId(String userId) {
+        // userId로 users 테이블에서 이메일 or 사용자 정보 가져오기
+        // 그 정보를 바탕으로 user_profile 테이블에서 상세 프로필 조회
+        Optional<User> optionalUser = userRepository.findByUserId(userId);
+        if (optionalUser.isEmpty()) return null;
+
+        String email = optionalUser.get().getEmail();
+        return getUserProfile(email); // 기존 이메일 기반 조회 재사용
+    }
+
+
 
 }

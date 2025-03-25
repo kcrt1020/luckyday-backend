@@ -42,7 +42,7 @@ public class UserProfileController {
             }
 
             userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            System.out.println("✅ SecurityContextHolder에서 UserPrincipal 가져옴: " + userPrincipal.getEmail());
+//            System.out.println("✅ SecurityContextHolder에서 UserPrincipal 가져옴: " + userPrincipal.getEmail());
         }
 
         String email = userPrincipal.getEmail();
@@ -72,7 +72,7 @@ public class UserProfileController {
         if (clovers.isEmpty()) {
             System.out.println("⚠️ 클로버 데이터가 없음!");
         } else {
-            System.out.println("✅ 클로버 데이터 반환: " + clovers);
+//            System.out.println("✅ 클로버 데이터 반환: " + clovers);
         }
 
         return ResponseEntity.ok(clovers);
@@ -127,6 +127,23 @@ public class UserProfileController {
         userProfileService.updateUserId(email, profileDTO.getUserId());
 
         return ResponseEntity.ok(profileDTO);
+    }
+
+    /**
+     * 다른 사용자의 프로필 조회 (userId 기반)
+     */
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getOtherUserProfile(@PathVariable String userId) {
+        System.out.println("🔍 다른 유저 프로필 조회 요청 - userId: " + userId);
+
+        // userId 기반으로 프로필 정보 조회
+        UserProfileDTO profile = userProfileService.getUserProfileByUserId(userId);
+
+        if (profile == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        return ResponseEntity.ok(profile);
     }
 
 }

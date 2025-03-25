@@ -56,11 +56,11 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String email = jwtUtil.extractEmail(token);
-        System.out.println("✅ JWT 인증 완료 : " + email);
+//        System.out.println("✅ JWT 인증 완료 : " + email);
 
         // ✅ UserDetails 가져오기
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        System.out.println("🔍 UserDetails 로드 완료: " + userDetails.getUsername());
+//        System.out.println("🔍 UserDetails 로드 완료: " + userDetails.getUsername());
 
         // ✅ Authentication 객체 생성
         UsernamePasswordAuthenticationToken authentication =
@@ -70,7 +70,7 @@ public class JwtFilter extends OncePerRequestFilter {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
-        System.out.println("✅ SecurityContextHolder에 인증 정보 설정 완료!");
+//        System.out.println("✅ SecurityContextHolder에 인증 정보 설정 완료!");
 
         chain.doFilter(request, response);
     }
