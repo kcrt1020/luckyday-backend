@@ -11,13 +11,14 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "clover_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"clover_id", "email"})
+        @UniqueConstraint(columnNames = {"clover_id", "user_id"})
 })
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CloverLike {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,7 +28,7 @@ public class CloverLike {
     private Clover clover;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "email", referencedColumnName = "email", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false, updatable = false)

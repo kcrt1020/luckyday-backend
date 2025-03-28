@@ -8,62 +8,59 @@ import com.example.luckydaybackend.model.UserProfile;
 import com.example.luckydaybackend.service.CloverService;
 import com.example.luckydaybackend.service.UserProfileService;
 import com.example.luckydaybackend.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/search")
+@RequiredArgsConstructor
 public class SearchController {
 
     private final CloverService cloverService;
     private final UserService userService;
     private final UserProfileService userProfileService;
 
-    public SearchController(CloverService cloverService,
-                            UserService userService,
-                            UserProfileService userProfileService) {
-        this.cloverService = cloverService;
-        this.userService = userService;
-        this.userProfileService = userProfileService;
-    }
-
+    /**
+     * 키워드로 클로버 검색
+     */
     @GetMapping("/clovers/{keyword}")
     public ResponseEntity<List<CloverDTO>> searchClovers(@PathVariable String keyword) {
         List<Clover> clovers = cloverService.searchCloversByKeyword(keyword);
+
         List<CloverDTO> result = clovers.stream().map(clover -> {
-            User user = userService.findByEmail(clover.getEmail());
-            Optional<UserProfile> profileOpt = userProfileService.findByEmail(clover.getEmail());
+            User user = clover.getUser();
+            UserProfile profile = user.getProfile();
 
-            String userId = (user != null) ? user.getUserId() : "Unknown";
-            String nickname = profileOpt.map(UserProfile::getNickname).orElse("Unknown");
-            String profileImage = profileOpt.map(UserProfile::getProfileImage).orElse("Unknown");
+            String username = user.getUsername();
+            String nickname = (profile != null) ? profile.getNickname() : "Unknown";
+            String profileImage = (profile != null) ? profile.getProfileImage() : null;
 
-            return new CloverDTO(clover, userId, nickname, profileImage);
+            return new CloverDTO(clover, username, nickname, profileImage);
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
     }
 
-
-
+    /**
+     * 키워드로 유저 검색
+     */
     @GetMapping("/users/{keyword}")
     public ResponseEntity<List<UserSearchDTO>> searchUsers(@PathVariable String keyword) {
         List<User> users = userService.searchUsersByKeyword(keyword);
 
         List<UserSearchDTO> result = users.stream().map(user -> {
-            Optional<UserProfile> profileOpt = userProfileService.findByEmail(user.getEmail());
+            UserProfile profile = user.getProfile();
 
-            String nickname = profileOpt.map(UserProfile::getNickname).orElse("Unknown");
-            String profileImage = profileOpt.map(UserProfile::getProfileImage).orElse("Unknown");
+            String nickname = (profile != null) ? profile.getNickname() : "Unknown";
+            String profileImage = (profile != null) ? profile.getProfileImage() : null;
 
-            return new UserSearchDTO(user.getUserId(), nickname, profileImage);
+            return new UserSearchDTO(user.getUsername(), nickname, profileImage);
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
     }
-
 }

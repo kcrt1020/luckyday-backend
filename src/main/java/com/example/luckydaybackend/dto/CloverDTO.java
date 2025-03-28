@@ -11,18 +11,16 @@ public class CloverDTO {
     private String content;
     private String imageUrl;
     private String createdAt;
-    private String email;
-    private String userId;
+    private String username;
     private String nickname;
     private String profileImage;
 
-    public CloverDTO(Clover clover, String userId, String nickname, String profileImage) {
+    public CloverDTO(Clover clover, String username, String nickname, String profileImage) {
         this.id = clover.getId();
         this.content = clover.getContent();
         this.imageUrl = clover.getImageUrl();
         this.createdAt = clover.getCreatedAt().toString();
-        this.email = clover.getEmail();
-        this.userId = userId;
+        this.username = username;
         this.nickname = nickname;
         this.profileImage = profileImage;
     }

@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class UserProfileDTO {
-    private String userId;  // ✅ userId 추가
-    private String email;
+    private String username;
+    private Long userId;
     private String nickname;
     private String profileImage;
     private String bio;

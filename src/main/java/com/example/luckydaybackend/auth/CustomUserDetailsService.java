@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return new UserPrincipal(
-                user.getId(),  // ✅ userId 추가
+                user.getId(),
                 user.getEmail(),
                 user.getPasswordHash(),
                 Collections.emptyList() // ✅ 권한이 없을 경우 빈 리스트라도 전달해야 함

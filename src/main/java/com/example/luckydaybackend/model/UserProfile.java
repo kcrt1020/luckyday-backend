@@ -11,14 +11,13 @@ import java.util.Date;
 
 @Entity
 @Table(name = "user_profile")
-@Getter @Setter
+@Getter
+@Setter
 public class UserProfile {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-//    @Column(nullable = false, unique = true)
-//    private String email; // ✅ 유저 ID 대신 이메일 저장
 
     private String nickname;
     private String profileImage;
@@ -31,11 +30,11 @@ public class UserProfile {
     @Column(name = "created_at", updatable = false, insertable = false)
     private Timestamp createdAt;
 
-    @Column(name = "updated_at", insertable = false) // ✅ 수정 시 자동 갱신
+    @Column(name = "updated_at", insertable = false)
     private Timestamp updatedAt;
 
-    @OneToOne
-    @JoinColumn(name = "email", referencedColumnName = "email") // 외래 키
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;
 }

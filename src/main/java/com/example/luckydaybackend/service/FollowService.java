@@ -24,8 +24,8 @@ public class FollowService {
     }
 
     // Id로 유저 조회
-    public User getUserByUserId(String userId) {
-        return userRepository.findByUserId(userId)
+    public User getUserByUserId(String username) {
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("대상 유저 없음"));
     }
 
@@ -59,14 +59,8 @@ public class FollowService {
 
     // 팔로잉 목록 조회
     public List<User> getFollowingList(User fromUser) {
-        System.out.println("📌 [팔로잉 목록 조회] 요청한 유저 ID (PK): " + fromUser.getId());
-        System.out.println("📌 [팔로잉 목록 조회] 요청한 유저 userId: " + fromUser.getUserId());
-
-        // 1. Follow 테이블에서 fromUser가 팔로우한 목록 조회
         List<Follow> follows = followRepository.findByFromUser(fromUser);
-        System.out.println("📌 [팔로잉 목록 조회] follow 수: " + follows.size());
 
-        // 2. 팔로우한 대상 유저 ID만 추출
         List<Long> toUserIds = follows.stream()
                 .map(f -> f.getToUser().getId())
                 .toList();

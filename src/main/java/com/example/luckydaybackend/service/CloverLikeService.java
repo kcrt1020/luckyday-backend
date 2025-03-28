@@ -13,20 +13,21 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CloverLikeService {
+
     private final CloverLikeRepository cloverLikeRepository;
     private final CloverRepository cloverRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
 
     @Transactional
-    public void likeClover(Long cloverId, String email) {
+    public void likeClover(Long cloverId, Long id) {
         Clover clover = cloverRepository.findById(cloverId)
                 .orElseThrow(() -> new IllegalArgumentException("클로버가 존재하지 않습니다."));
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
 
-        if (cloverLikeRepository.findByCloverIdAndUserEmail(cloverId, email).isPresent()) {
+        boolean alreadyLiked = cloverLikeRepository.existsByUserAndClover(user, clover);
+        if (alreadyLiked) {
             throw new IllegalStateException("이미 좋아요를 눌렀습니다.");
         }
 
@@ -37,10 +38,12 @@ public class CloverLikeService {
     }
 
     @Transactional
-    public void unlikeClover(Long cloverId, String email) {
-        User user = userService.findByEmail(email);
+    public void unlikeClover(Long cloverId, Long id) {
         Clover clover = cloverRepository.findById(cloverId)
                 .orElseThrow(() -> new IllegalArgumentException("클로버가 존재하지 않습니다."));
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
 
         boolean exists = cloverLikeRepository.existsByUserAndClover(user, clover);
         if (!exists) {
@@ -50,18 +53,17 @@ public class CloverLikeService {
         cloverLikeRepository.deleteByUserAndClover(user, clover);
     }
 
-
     public long getLikeCount(Long cloverId) {
         return cloverLikeRepository.countByCloverId(cloverId);
     }
 
-
-    public boolean hasUserLiked(Long cloverId, String email) {
+    public boolean hasUserLiked(Long cloverId, Long id) {
         Clover clover = cloverRepository.findById(cloverId)
                 .orElseThrow(() -> new IllegalArgumentException("클로버가 존재하지 않습니다."));
-        User user = userService.findByEmail(email);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+
         return cloverLikeRepository.existsByUserAndClover(user, clover);
     }
-
-
 }

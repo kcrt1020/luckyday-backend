@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
@@ -21,10 +22,10 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> getCurrentUser(
             @RequestHeader("Authorization") String token) {
 
-        String jwt = token.replace("Bearer ", ""); // "Bearer " 제거
-        String email = jwtUtil.extractEmail(jwt);
+        String jwt = token.replace("Bearer ", "");
+        Long id = jwtUtil.extractId(jwt); // ✅ 토큰에서 id 추출
 
-        UserResponseDTO user = userService.getUserByEmail(email);
+        UserResponseDTO user = userService.getUserById(id); // ✅ id 기반 조회
         return ResponseEntity.ok(user);
     }
 }

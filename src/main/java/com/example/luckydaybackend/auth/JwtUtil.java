@@ -17,33 +17,37 @@ public class JwtUtil {
     private static final long ACCESS_EXPIRATION = 1000 * 60 * 15; // 액세스 토큰 만료: 15분
     private static final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 리프레시 토큰 만료: 7일
 
-    // ✅ Base64 디코딩해서 서명 키 가져오기
+    // Base64 디코딩해서 서명 키 가져오기
     private Key getSigningKey() {
         byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // ✅ 액세스 토큰 생성
-    public String generateAccessToken(String userId) {
+    // 액세스 토큰 생성
+    public String generateAccessToken(Long id, String email) {
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(email)
+                .claim("id", id)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // ✅ 리프레시 토큰 생성
-    public String generateRefreshToken(String userId) {
+
+    // 리프레시 토큰 생성
+    public String generateRefreshToken(Long id, String email) {
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(email)
+                .claim("id", id)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // ✅ 토큰에서 email 추출
+
+    // 토큰에서 email 추출
     public String extractEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -52,6 +56,18 @@ public class JwtUtil {
                 .getBody()
                 .getSubject();
     }
+
+    // ✅ 토큰에서 ID 추출
+    public Long extractId(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("id", Long.class);
+    }
+
+
 
     // ✅ 토큰 검증 (만료 여부 포함)
     public boolean validateToken(String token) {

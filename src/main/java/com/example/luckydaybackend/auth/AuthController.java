@@ -45,7 +45,7 @@ public class AuthController {
     @PostMapping("/register")
     @Transactional
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        System.out.println("🔥 회원가입 요청: " + request.getUserId() + " / " + request.getEmail());
+        System.out.println("🔥 회원가입 요청: " + request.getUsername() + " / " + request.getEmail());
 
         // ✅ 이메일 중복 검사
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -53,13 +53,13 @@ public class AuthController {
         }
 
         // ✅ 아이디 중복 검사
-        if (userRepository.existsByUserId(request.getUserId())) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body("❌ 이미 존재하는 아이디입니다.");
         }
 
         // ✅ 새로운 유저 생성
         User user = new User();
-        user.setUserId(request.getUserId());
+        user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword())); // 🔒 비밀번호 암호화
 
@@ -103,7 +103,7 @@ public class AuthController {
         userSessionRepository.deleteByUserId(user.getId());
 
         // ✅ 새 리프레시 토큰 발급
-        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
 
         // ✅ 리프레시 토큰을 저장
         UserSession session = new UserSession();
@@ -116,7 +116,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("accessToken", jwtUtil.generateAccessToken(user.getEmail()), "refreshToken", refreshToken));
+                .body(Map.of("accessToken", jwtUtil.generateAccessToken(user.getId(), user.getEmail()), "refreshToken", refreshToken));
     }
 
 
@@ -133,14 +133,14 @@ public class AuthController {
         String refreshToken = request.get("refreshToken");
         logger.info("🔄 클라이언트가 보낸 리프레시 토큰: " + refreshToken);
 
-        String email = jwtUtil.extractEmail(refreshToken);
-        if (email == null) {
+        Long id = jwtUtil.extractId(refreshToken);
+        if (id == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("error", "유효하지 않은 리프레시 토큰"));
         }
 
-        Optional<User> user = userRepository.findByEmail(email);
+        Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -167,7 +167,7 @@ public class AuthController {
                     .body(Map.of("error", "유효하지 않은 리프레시 토큰"));
         }
 
-        String newAccessToken = jwtUtil.generateAccessToken(email);
+        String newAccessToken = jwtUtil.generateAccessToken(user.get().getId(), user.get().getEmail());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("accessToken", newAccessToken));
@@ -179,9 +179,9 @@ public class AuthController {
     @Transactional // ✅ 트랜잭션 추가
     public ResponseEntity<String> logout(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
-        String email = jwtUtil.extractEmail(refreshToken);
+        Long id = jwtUtil.extractId(refreshToken);
 
-        Optional<User> user = userRepository.findByEmail(email);
+        Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("유저를 찾을 수 없습니다.");
         }

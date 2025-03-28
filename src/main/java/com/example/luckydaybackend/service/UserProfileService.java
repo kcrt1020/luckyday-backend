@@ -12,141 +12,89 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserProfileService {
+
     private final UserProfileRepository userProfileRepository;
-    private final StorageService storageService; // ✅ 올바른 서비스 사용
+    private final StorageService storageService;
     private final UserRepository userRepository;
 
-    /**
-     * 이메일 기반 유저 프로필 조회 (Optional)
-     */
-    public Optional<UserProfile> findByEmail(String email) {
-        return userProfileRepository.findByUser_Email(email);
+    public Optional<UserProfile> findByUserId(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null ? userProfileRepository.findByUser(user) : Optional.empty();
     }
 
-    /**
-     * 이메일 기반 유저 프로필 조회
-     */
-    public UserProfileDTO getUserProfile(String email) {
-        UserProfile profile = userProfileRepository.findByUser_Email(email)
+    public UserProfileDTO getUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        UserProfile profile = userProfileRepository.findByUser(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-
-        if (optionalUser.isEmpty()) {
-            throw new RuntimeException("유저를 찾을 수 없습니다: " + email);
-        }
-
-        User user = optionalUser.get();  // ✅ userId가 User 테이블에 있으므로 가져옴
-
-        return new UserProfileDTO(
-                user.getUserId(),
-                user.getEmail(),
-                profile.getNickname(),
-                profile.getProfileImage(),
-                profile.getBio(),
-                profile.getLocation(),
-                profile.getWebsite(),
-                profile.getBirthDate()
-        );
+        return UserProfileDTO.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .nickname(profile.getNickname())
+                .profileImage(profile.getProfileImage())
+                .bio(profile.getBio())
+                .location(profile.getLocation())
+                .website(profile.getWebsite())
+                .birthDate(profile.getBirthDate())
+                .build();
     }
 
-    /**
-     * 프로필 이미지 업로드 (이메일 기반)
-     */
-    public UserProfileDTO uploadProfileImage(String email, MultipartFile file) {
-        UserProfile profile = userProfileRepository.findByUser_Email(email)
+    public UserProfileDTO uploadProfileImage(Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        UserProfile profile = userProfileRepository.findByUser(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
-        // 저장할 파일 이름 (파일 중복 방지)
-        String fileName = "avatar_" + email.replace("@", "_") + "_" + file.getOriginalFilename();
-
-        // 로컬 저장소에 이미지 저장
+        String fileName = "avatar_" + user.getUsername() + "_" + file.getOriginalFilename();
         String imageUrl = storageService.saveImage(file, fileName);
-
-        // 프로필 이미지 업데이트 및 DTO 반환
-        return updateProfileImage(email, imageUrl);
-    }
-
-    /**
-     * 프로필 이미지 업데이트 (이메일 기반)
-     */
-    public UserProfileDTO updateProfileImage(String email, String imageUrl) {
-        UserProfile profile = userProfileRepository.findByUser_Email(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
-
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-
-        if (optionalUser.isEmpty()) {
-            throw new RuntimeException("유저를 찾을 수 없습니다: " + email);
-        }
-        User user = optionalUser.get();  // ✅ userId가 User 테이블에 있으므로 가져옴
-
 
         profile.setProfileImage(imageUrl);
         userProfileRepository.save(profile);
 
-        return new UserProfileDTO(
-                user.getUserId(),
-                user.getEmail(),
-                profile.getNickname(),
-                profile.getProfileImage(),
-                profile.getBio(),
-                profile.getLocation(),
-                profile.getWebsite(),
-                profile.getBirthDate()
-        );
+        return getUserProfile(userId);
+    }
+
+    public void updateUsername(Long userId, String newUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        user.setUsername(newUsername);
+        userRepository.save(user);
     }
 
     @Transactional
-    public void updateUserId(String email, String newUserId) {
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isPresent()) {
-            user.get().setUserId(newUserId);
-            userRepository.save(user.get());
-        } else {
-            throw new RuntimeException("User not found with email: " + email);
-        }
+    public void updateUserProfile(Long userId, UserProfileDTO dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("UserProfile not found"));
+
+        profile.setNickname(dto.getNickname());
+        profile.setBio(dto.getBio());
+        profile.setLocation(dto.getLocation());
+        profile.setWebsite(dto.getWebsite());
+        profile.setBirthDate(dto.getBirthDate());
+
+        userProfileRepository.save(profile);
     }
 
-    @Transactional
-    public void updateUserProfile(String email, UserProfileDTO dto) {
-        Optional<UserProfile> optionalProfile = userProfileRepository.findByUser_Email(email);
+    public UserProfileDTO getUserProfileByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (optionalProfile.isPresent()) {
-            UserProfile profile = optionalProfile.get();
-
-            profile.setNickname(dto.getNickname());
-            profile.setBio(dto.getBio());
-            profile.setLocation(dto.getLocation());
-            profile.setWebsite(dto.getWebsite());
-            profile.setBirthDate(dto.getBirthDate());
-
-            userProfileRepository.save(profile);
-        } else {
-            throw new RuntimeException("UserProfile not found for email: " + email);
-        }
-    }
-
-    public UserProfileDTO getUserProfileByUserId(String userId) {
-        // userId로 users 테이블에서 이메일 or 사용자 정보 가져오기
-        // 그 정보를 바탕으로 user_profile 테이블에서 상세 프로필 조회
-        Optional<User> optionalUser = userRepository.findByUserId(userId);
-        if (optionalUser.isEmpty()) return null;
-
-        String email = optionalUser.get().getEmail();
-        return getUserProfile(email); // 기존 이메일 기반 조회 재사용
+        return getUserProfile(user.getId());
     }
 
     public List<UserProfile> findByNicknameContaining(String keyword) {
         return userProfileRepository.findByNicknameContainingIgnoreCase(keyword);
     }
-
-
 }

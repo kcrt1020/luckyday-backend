@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 public class UserSearchDTO {
-    private String userId;
+    private String username;
     private String nickname;
     private String profileImage;
 }

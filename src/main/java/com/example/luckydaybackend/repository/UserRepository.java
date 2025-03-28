@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User,Long> {
-    boolean existsByUserId(String userId);
+    boolean existsByUsername(String userId);
     boolean existsByEmail(String email);
 
     Optional<User> findByEmail(String email);
-    Optional<User> findByUserId(String userId);
+    Optional<User> findByUsername(String userId);
     Optional<User> findById(Long id);
 
     @Query("SELECT u FROM User u JOIN FETCH u.profile WHERE u IN :users")
@@ -24,7 +24,7 @@ public interface UserRepository extends JpaRepository<User,Long> {
     @Query("SELECT u FROM User u JOIN FETCH u.profile WHERE u.id IN :ids")
     List<User> findAllWithProfileByIdIn(@Param("ids") List<Long> ids);
 
-    List<User> findByUserIdContainingIgnoreCase(String userId);
+    List<User> findByUsernameContainingIgnoreCase(String userId);
 
 }
 
