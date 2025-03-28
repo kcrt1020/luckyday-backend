@@ -17,4 +17,6 @@ public interface CloverRepository extends JpaRepository<Clover, Long> {
 
     List<Clover> findByParentCloverId(Long parentId);
 
+    // 키워드가 content에 포함된 게시글을 최신순으로 조회
+    List<Clover> findByContentContainingIgnoreCaseOrderByCreatedAtDesc(String keyword);
 }

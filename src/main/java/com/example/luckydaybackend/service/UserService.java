@@ -9,11 +9,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final UserProfileService userProfileService;
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -34,4 +39,29 @@ public class UserService {
 
         return new UserResponseDTO(user.getUserId(), user.getEmail(), profile.getNickname(), profile.getProfileImage());
     }
+
+    public List<User> searchUsersByKeyword(String keyword) {
+        List<User> byUserId = userRepository.findByUserIdContainingIgnoreCase(keyword);
+
+        List<UserProfile> byNickname = userProfileService.findByNicknameContaining(keyword);
+        List<User> byNicknameUsers = byNickname.stream()
+                .map(profile -> profile.getUser().getEmail())
+                .map(userRepository::findByEmail)
+                .flatMap(Optional::stream)
+                .toList();
+
+
+        // userId 검색 + nickname 검색 결과 합치고 중복 제거
+        Set<String> seenEmails = new HashSet<>();
+        List<User> merged = new ArrayList<>();
+
+        Stream.concat(byUserId.stream(), byNicknameUsers.stream()).forEach(user -> {
+            if (seenEmails.add(user.getEmail())) {
+                merged.add(user);
+            }
+        });
+
+        return merged;
+    }
+
 }

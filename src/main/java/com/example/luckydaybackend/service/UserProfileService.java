@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -143,6 +144,9 @@ public class UserProfileService {
         return getUserProfile(email); // 기존 이메일 기반 조회 재사용
     }
 
+    public List<UserProfile> findByNicknameContaining(String keyword) {
+        return userProfileRepository.findByNicknameContainingIgnoreCase(keyword);
+    }
 
 
 }

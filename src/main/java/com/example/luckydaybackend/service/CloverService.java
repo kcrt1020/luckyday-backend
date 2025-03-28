@@ -67,5 +67,9 @@ public class CloverService {
         return cloverRepository.findByParentCloverId(parentId);
     }
 
+    public List<Clover> searchCloversByKeyword(String keyword) {
+        return cloverRepository.findByContentContainingIgnoreCaseOrderByCreatedAtDesc(keyword);
+    }
+
 
 }
