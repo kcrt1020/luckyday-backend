@@ -26,14 +26,14 @@ public class UserProfileService {
      * 이메일 기반 유저 프로필 조회 (Optional)
      */
     public Optional<UserProfile> findByEmail(String email) {
-        return userProfileRepository.findByEmail(email);
+        return userProfileRepository.findByUser_Email(email);
     }
 
     /**
      * 이메일 기반 유저 프로필 조회
      */
     public UserProfileDTO getUserProfile(String email) {
-        UserProfile profile = userProfileRepository.findByEmail(email)
+        UserProfile profile = userProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
         Optional<User> optionalUser = userRepository.findByEmail(email);
@@ -46,7 +46,7 @@ public class UserProfileService {
 
         return new UserProfileDTO(
                 user.getUserId(),
-                profile.getEmail(),
+                user.getEmail(),
                 profile.getNickname(),
                 profile.getProfileImage(),
                 profile.getBio(),
@@ -60,7 +60,7 @@ public class UserProfileService {
      * 프로필 이미지 업로드 (이메일 기반)
      */
     public UserProfileDTO uploadProfileImage(String email, MultipartFile file) {
-        UserProfile profile = userProfileRepository.findByEmail(email)
+        UserProfile profile = userProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
         // 저장할 파일 이름 (파일 중복 방지)
@@ -77,7 +77,7 @@ public class UserProfileService {
      * 프로필 이미지 업데이트 (이메일 기반)
      */
     public UserProfileDTO updateProfileImage(String email, String imageUrl) {
-        UserProfile profile = userProfileRepository.findByEmail(email)
+        UserProfile profile = userProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
         Optional<User> optionalUser = userRepository.findByEmail(email);
@@ -93,7 +93,7 @@ public class UserProfileService {
 
         return new UserProfileDTO(
                 user.getUserId(),
-                profile.getEmail(),
+                user.getEmail(),
                 profile.getNickname(),
                 profile.getProfileImage(),
                 profile.getBio(),
@@ -116,7 +116,7 @@ public class UserProfileService {
 
     @Transactional
     public void updateUserProfile(String email, UserProfileDTO dto) {
-        Optional<UserProfile> optionalProfile = userProfileRepository.findByEmail(email);
+        Optional<UserProfile> optionalProfile = userProfileRepository.findByUser_Email(email);
 
         if (optionalProfile.isPresent()) {
             UserProfile profile = optionalProfile.get();

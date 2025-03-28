@@ -30,4 +30,7 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserProfile profile;
+
 }

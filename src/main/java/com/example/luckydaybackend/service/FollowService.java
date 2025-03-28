@@ -17,7 +17,13 @@ public class FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
 
-    // userId로 유저 조회
+    // Id로 유저 조회
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("대상 유저 없음"));
+    }
+
+    // Id로 유저 조회
     public User getUserByUserId(String userId) {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("대상 유저 없음"));
@@ -53,18 +59,35 @@ public class FollowService {
 
     // 팔로잉 목록 조회
     public List<User> getFollowingList(User fromUser) {
-        List<Follow> follows = followRepository.findByFromUser(fromUser);  // fromUser가 팔로우한 사람들
-        return follows.stream()
-                .map(Follow::getToUser)  // 팔로우한 대상인 toUser 반환
+        System.out.println("📌 [팔로잉 목록 조회] 요청한 유저 ID (PK): " + fromUser.getId());
+        System.out.println("📌 [팔로잉 목록 조회] 요청한 유저 userId: " + fromUser.getUserId());
+
+        // 1. Follow 테이블에서 fromUser가 팔로우한 목록 조회
+        List<Follow> follows = followRepository.findByFromUser(fromUser);
+        System.out.println("📌 [팔로잉 목록 조회] follow 수: " + follows.size());
+
+        // 2. 팔로우한 대상 유저 ID만 추출
+        List<Long> toUserIds = follows.stream()
+                .map(f -> f.getToUser().getId())
                 .toList();
+        System.out.println("📌 [팔로잉 목록 조회] 팔로우한 유저 ID 목록: " + toUserIds);
+
+        // 3. 대상 유저 + 프로필 정보 가져오기
+        List<User> users = userRepository.findAllWithProfileByIdIn(toUserIds);
+        System.out.println("📌 [팔로잉 목록 조회] 최종 반환 유저 수 (프로필 포함): " + users.size());
+
+        return users;
     }
+
 
     // 팔로워 목록 조회
     public List<User> getFollowersList(User toUser) {
-        List<Follow> follows = followRepository.findByToUser(toUser);  // toUser가 팔로워한 사람들
-        return follows.stream()
-                .map(Follow::getFromUser)  // 팔로워인 fromUser 반환
+        List<Follow> follows = followRepository.findByToUser(toUser);
+        List<User> fromUsers = follows.stream()
+                .map(Follow::getFromUser)
                 .toList();
+
+        return userRepository.findAllWithProfileByUsers(fromUsers);
     }
 
     // 팔로잉 수 조회

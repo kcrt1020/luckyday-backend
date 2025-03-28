@@ -29,7 +29,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
-        UserProfile profile = userProfileRepository.findByEmail(email)
+        UserProfile profile = userProfileRepository.findByUser_Email(email)
                 .orElseThrow(() -> new IllegalArgumentException("User profile not found for email: " + email));
 
         return new UserResponseDTO(user.getUserId(), user.getEmail(), profile.getNickname(), profile.getProfileImage());

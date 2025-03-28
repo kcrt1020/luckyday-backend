@@ -43,6 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Transactional
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         System.out.println("🔥 회원가입 요청: " + request.getUserId() + " / " + request.getEmail());
 
@@ -65,9 +66,9 @@ public class AuthController {
         userRepository.save(user);
         System.out.println("✨ 신규 유저 생성: " + user.getEmail());
 
-        // ✅ `user_profile` 생성 (`email` 저장)
+        // ✅ `user_profile` 생성 (이제 email 필드 X, 대신 user 연결)
         UserProfile userProfile = new UserProfile();
-        userProfile.setEmail(request.getEmail()); // ✅ 이메일 저장
+        userProfile.setUser(user); // ✅ user 객체 설정
         userProfile.setNickname(request.getNickname());
         userProfile.setProfileImage(null);
         userProfile.setBio(null);

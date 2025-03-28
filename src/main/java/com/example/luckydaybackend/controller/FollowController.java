@@ -58,25 +58,28 @@ public class FollowController {
     }
 
     // 팔로잉 목록 조회
-    @GetMapping("/following")
-    public ResponseEntity<?> getFollowingList(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        User fromUser = followService.getUserByUserId(userPrincipal.getEmail());
-        List<User> followingList = followService.getFollowingList(fromUser);
+    @GetMapping("/following/{targetUserId}")
+    public ResponseEntity<?> getFollowingList(@PathVariable String targetUserId) {
+        User user = followService.getUserByUserId(targetUserId);
+        System.out.println("📌 user = " + user);
+        List<User> followingList = followService.getFollowingList(user);
+        System.out.println("📌 followingList = " + followingList);
         return ResponseEntity.ok().body(followingList);
     }
 
     // 팔로워 목록 조회
-    @GetMapping("/followers")
-    public ResponseEntity<?> getFollowersList(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        User toUser = followService.getUserByUserId(userPrincipal.getEmail());
-        List<User> followersList = followService.getFollowersList(toUser);
+    @GetMapping("/followers/{targetUserId}")
+    public ResponseEntity<?> getFollowersList(@PathVariable String targetUserId) {
+        User user = followService.getUserByUserId(targetUserId);
+        List<User> followersList = followService.getFollowersList(user);
         return ResponseEntity.ok().body(followersList);
     }
+
 
     // 팔로잉 수 조회
     @GetMapping("/following/count")
     public ResponseEntity<?> getFollowingCount(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        User fromUser = followService.getUserByUserId(userPrincipal.getEmail());
+        User fromUser = followService.getUserById(userPrincipal.getId());
         long followingCount = followService.getFollowingCount(fromUser);
         return ResponseEntity.ok().body(Map.of("followingCount", followingCount));
     }
@@ -84,7 +87,7 @@ public class FollowController {
     // 팔로워 수 조회
     @GetMapping("/followers/count")
     public ResponseEntity<?> getFollowersCount(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        User toUser = followService.getUserByUserId(userPrincipal.getEmail());
+        User toUser = followService.getUserById(userPrincipal.getId());
         long followersCount = followService.getFollowersCount(toUser);
         return ResponseEntity.ok().body(Map.of("followersCount", followersCount));
     }
