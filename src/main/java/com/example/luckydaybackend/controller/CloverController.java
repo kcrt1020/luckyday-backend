@@ -6,10 +6,7 @@ import com.example.luckydaybackend.dto.CloverDTO;
 import com.example.luckydaybackend.model.Clover;
 import com.example.luckydaybackend.model.User;
 import com.example.luckydaybackend.model.UserProfile;
-import com.example.luckydaybackend.service.CloverService;
-import com.example.luckydaybackend.service.StorageService;
-import com.example.luckydaybackend.service.UserProfileService;
-import com.example.luckydaybackend.service.UserService;
+import com.example.luckydaybackend.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -32,6 +29,7 @@ public class CloverController {
     private final CloverService cloverService;
     private final UserService userService;
     private final StorageService storageService;
+    private final NotificationService notificationService;
 
     /**
      * 클로버 생성 API
@@ -60,21 +58,30 @@ public class CloverController {
 
             clover.setUser(user);
 
+            // 🔥 답글일 경우 부모 클로버 설정
             if (clover.getParentClover() != null && clover.getParentClover().getId() != null) {
                 Clover parent = cloverService.findById(clover.getParentClover().getId());
                 if (parent == null) {
                     return ResponseEntity.badRequest().body("존재하지 않는 부모 클로버입니다.");
                 }
                 clover.setParentClover(parent);
+
+                // 🔔 부모 작성자에게 알림 보내기
+                if (!parent.getUser().getId().equals(userId)) {
+                    notificationService.sendNotification(
+                            parent.getUser().getId(),   // receiverId
+                            user.getId(),               // senderId
+                            "COMMENT",                  // type
+                            parent.getId(),             // targetId (댓글 달린 부모 클로버 ID)
+                            "/clovers/" + parent.getId()// url
+                    );
+                }
             }
 
+            // 📸 이미지 처리
             if (file != null && !file.isEmpty()) {
-                // 파일명 설정 (중복 방지)
                 String fileName = "clover_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-
-                // 기존의 storageService 메서드를 그대로 사용
                 String imageUrl = storageService.saveImage(file, fileName);
-
                 clover.setImageUrl(imageUrl);
             }
 
@@ -86,6 +93,7 @@ public class CloverController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("클로버 등록 중 오류 발생");
         }
     }
+
 
     /**
      * 모든 클로버 조회 API

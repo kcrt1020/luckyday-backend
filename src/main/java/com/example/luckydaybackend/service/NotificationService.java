@@ -1,8 +1,9 @@
 package com.example.luckydaybackend.service;
 
 import com.example.luckydaybackend.model.Notification;
+import com.example.luckydaybackend.model.User;
 import com.example.luckydaybackend.repository.NotificationRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.luckydaybackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,38 +15,57 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
-    // 알림 생성
-    public void createNotification(Long receiverId, Long senderId, String type, Long targetId) {
-        if (receiverId.equals(senderId)) return; // 자기 자신한테 알림 안 줌
+    /**
+     * 알림 생성 (알림 받을 사람, 내용, URL)
+     */
+    public void sendNotification(Long receiverId, Long senderId, String type, Long targetId, String url) {
+        // 받는 사람
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new RuntimeException("알림 받을 유저를 찾을 수 없습니다."));
 
+        // 보낸 사람
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new RuntimeException("알림 보낸 유저를 찾을 수 없습니다."));
+
+        // 알림 객체 생성
         Notification notification = Notification.builder()
-                .receiverId(receiverId)
-                .senderId(senderId)
-                .type(type)
-                .targetId(targetId)
+                .receiver(receiver)
+                .sender(sender)
+                .type(type)            // ex: "LIKE", "COMMENT", "FOLLOW"
+                .targetId(targetId)    // ex: 클로버 ID or 유저 ID
+                .url(url)              // ex: "/clovers/123"
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        // 저장
         notificationRepository.save(notification);
     }
 
-    // 유저의 알림 목록
+
+    /**
+     * 알림 목록 조회
+     */
     public List<Notification> getNotifications(Long receiverId) {
         return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId);
     }
 
-    // 특정 알림 읽음 처리
-    public void markAsRead(Long notificationId) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new EntityNotFoundException("알림을 찾을 수 없습니다."));
-        notification.setIsRead(true);
-        notificationRepository.save(notification);
+    /**
+     * 읽지 않은 알림 개수 조회
+     */
+    public long countUnread(Long receiverId) {
+        return notificationRepository.countByReceiverIdAndIsReadFalse(receiverId);
     }
 
-    // 안 읽은 알림 개수
-    public Long countUnread(Long receiverId) {
-        return notificationRepository.countByReceiverIdAndIsReadFalse(receiverId);
+    /**
+     * 특정 알림 읽음 처리
+     */
+    public void markAsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다."));
+        notification.setRead(true);
+        notificationRepository.save(notification);
     }
 }

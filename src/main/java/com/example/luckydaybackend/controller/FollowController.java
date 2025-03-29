@@ -3,6 +3,8 @@ package com.example.luckydaybackend.controller;
 import com.example.luckydaybackend.auth.UserPrincipal;
 import com.example.luckydaybackend.model.User;
 import com.example.luckydaybackend.service.FollowService;
+import com.example.luckydaybackend.service.NotificationService;
+import com.example.luckydaybackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +19,8 @@ import java.util.Map;
 public class FollowController {
 
     private final FollowService followService;
+    private final UserService userService;
+    private final NotificationService notificationService;
 
     // 팔로우 상태 확인
     @GetMapping("/status/{targetUserId}")
@@ -41,8 +45,24 @@ public class FollowController {
         // 팔로우 하기
         followService.follow(userPrincipal.getEmail(), targetUser);
 
+        // 내 정보 가져오기 (팔로우 건 사람)
+        User sender = userService.findById(userPrincipal.getId());
+
+        // 자기 자신 팔로우가 아닌 경우에만 알림
+        if (!sender.getId().equals(targetUser.getId())) {
+            notificationService.sendNotification(
+                    targetUser.getId(),              // 알림 받는 사람
+                    sender.getId(),                  // 보낸 사람
+                    "FOLLOW",                        // 알림 타입
+                    sender.getId(),                  // 타겟 ID (보낸 사람의 ID → 프로필 클릭용)
+                    "/profile/" + sender.getUsername() // 공개용 userId로 URL 구성
+            );
+        }
+
+
         return ResponseEntity.ok().body(Map.of("message", "팔로우 완료"));
     }
+
 
     // 언팔로우 하기
     @DeleteMapping("/{targetUserId}")

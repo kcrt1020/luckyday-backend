@@ -6,7 +6,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notifications")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,12 +17,14 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long receiverId;
-    private Long senderId;
-    private String type;
-    private Long targetId;
+    private String type;        // "LIKE", "COMMENT", "FOLLOW"
+    private Long targetId;      // 해당 클로버 ID or 유저 ID
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User sender;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User receiver;
+    private String url;
+    private boolean isRead;
+    private LocalDateTime createdAt;
 
-    private Boolean isRead = false;
-
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

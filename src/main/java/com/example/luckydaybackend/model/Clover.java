@@ -1,5 +1,6 @@
 package com.example.luckydaybackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -32,5 +33,6 @@ public class Clover {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id") // FK: users.id
+    @JsonIgnore
     private User user;
 }

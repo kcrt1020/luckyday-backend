@@ -17,21 +17,27 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    // 알림 목록 조회
+    /**
+     * 로그인한 사용자의 알림 목록 조회
+     */
     @GetMapping
     public ResponseEntity<List<Notification>> getNotifications(@AuthenticationPrincipal UserPrincipal user) {
         List<Notification> notifications = notificationService.getNotifications(user.getId());
         return ResponseEntity.ok(notifications);
     }
 
-    // 특정 알림 읽음 처리
+    /**
+     * 특정 알림을 읽음 처리
+     */
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         notificationService.markAsRead(id);
         return ResponseEntity.ok().build();
     }
 
-    // 안 읽은 알림 개수
+    /**
+     * 읽지 않은 알림 개수 조회
+     */
     @GetMapping("/unread-count")
     public ResponseEntity<Long> countUnread(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(notificationService.countUnread(user.getId()));
