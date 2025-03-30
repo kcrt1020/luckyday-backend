@@ -57,9 +57,14 @@ public class SearchController {
 
             String nickname = (profile != null) ? profile.getNickname() : "Unknown";
             String profileImage = (profile != null) ? profile.getProfileImage() : null;
+            String bio = (profile != null) ? profile.getBio() : null;
 
-            return new UserSearchDTO(user.getUsername(), nickname, profileImage);
+            return new UserSearchDTO(
+                    user.getUsername(),
+                    new UserSearchDTO.Profile(nickname, profileImage, bio)
+            );
         }).collect(Collectors.toList());
+
 
         return ResponseEntity.ok(result);
     }
