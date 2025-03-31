@@ -3,6 +3,7 @@ FROM openjdk:17
 
 # 환경 변수 설정 (파일 저장 경로)
 ENV FILE_UPLOAD_DIR=/app/uploads
+ENV SPRING_PROFILES_ACTIVE=prod
 
 WORKDIR /app
 COPY build/libs/luckyday-backend-0.0.1-SNAPSHOT.jar app.jar
