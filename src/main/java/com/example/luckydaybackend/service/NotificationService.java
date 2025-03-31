@@ -7,6 +7,7 @@ import com.example.luckydaybackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -62,10 +63,17 @@ public class NotificationService {
     /**
      * 특정 알림 읽음 처리
      */
-    public void markAsRead(Long notificationId) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("알림을 찾을 수 없습니다."));
-        notification.setRead(true);
-        notificationRepository.save(notification);
+    public void markAsRead(Long notificationId, Long userId) {
+
+        Notification noti = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("알림 없음"));
+
+        System.out.println("알림 ID: " + notificationId);
+        System.out.println("요청자 ID: " + userId);
+
+        noti.setRead(true);
+        notificationRepository.save(noti);
     }
+
+
 }

@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -30,10 +29,16 @@ public class NotificationController {
      * 특정 알림을 읽음 처리
      */
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
-        notificationService.markAsRead(id);
+    public ResponseEntity<Void> markAsRead(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
+        System.out.println(">>> 알림 읽음 컨트롤러 진입함"); // 로그 출력되는지 확인
+        notificationService.markAsRead(id, user.getId());
         return ResponseEntity.ok().build();
     }
+
+
 
     /**
      * 읽지 않은 알림 개수 조회
