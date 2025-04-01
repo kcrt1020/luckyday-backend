@@ -64,7 +64,7 @@ public class SecurityConfig {
                 "http://3.39.254.4",
                 "http://luckyday.asia",
                 "https://luckyday.asia"));
-//        configuration.setAllowedOriginPatterns(List.of("*")); // 와일드카드 허용
+        configuration.setAllowedOriginPatterns(List.of("*")); // 와일드카드 허용
         configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));
